@@ -5,3 +5,12 @@ def func1():
 
 def func2():
     pass
+
+
+
+
+
+
+
+def func2():
+    pass
