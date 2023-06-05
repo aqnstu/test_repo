@@ -46,7 +46,7 @@ jobs:
         flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --select=E,F \
         --show-source --statistics
         flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --exit-zero \
-        --max-line-length=120 --indent-size 4 --max-complexity=20 --statistics
+        --max-line-length=120 --indent-size 4 --max-complexity=20 --statistics --color=always
 
   build:
     needs: [ check ]
