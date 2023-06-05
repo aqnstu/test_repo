@@ -17,35 +17,46 @@ jobs:
       uses: actions/checkout@v3.5.2
     
     - name: Get Python changed files
-      id: changes
+      id: py-changes
       uses: tj-actions/changed-files@v36.0.17
       with:
         files: |
+          *.py
           **/*.py
         separator: " "
     
+    - name: Get env and docker changed files
+      id: env-changes
+      uses: tj-actions/changed-files@v36.0.17
+      with:
+        files: |
+          *.env
+          **/*.env
+          ci/**
+        separator: " "
+    
     - id: fetch_changes
-      run: echo "need_build=${{ steps.changes.outputs.any_changed }}" >> "$GITHUB_OUTPUT"
+      run: echo "need_build=${{ steps.env-changes.outputs.any_changed }}" >> "$GITHUB_OUTPUT"
         
     - name: Set up Python 3.11
-      if: steps.changes.outputs.any_changed == 'true'
+      if: steps.py-changes.outputs.any_changed == 'true'
       uses: actions/setup-python@v4.6.1
       with:
         python-version: "3.10"
 
     - name: Install dependencies for linter
-      if: steps.changes.outputs.any_changed == 'true'
+      if: steps.py-changes.outputs.any_changed == 'true'
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Lint with flake8
-      if: steps.changes.outputs.any_changed == 'true'
+      if: steps.py-changes.outputs.any_changed == 'true'
       run: |
-        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --select=E,F \
+        flake8 ${{ steps.py-changes.outputs.all_changed_and_modified_files }} --count --select=E,F \
         --show-source --statistics
-        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --exit-zero \
+        flake8 ${{ steps.py-changes.outputs.all_changed_and_modified_files }} --count --exit-zero \
         --max-line-length=120 --indent-size 4 --max-complexity=20 --statistics --color=always
 
   build:
