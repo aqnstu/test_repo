@@ -1,0 +1,65 @@
+name: Checking code, building an image and pushing to DH
+
+on:
+  pull_request:
+    branches: [ main, master, dev, develop ]
+
+jobs:
+  check:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3.5.2
+  
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4.6.1
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies for linter
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F4,F6,F7,F8,F9 --show-source --statistics
+        # exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+        - name: Test with pytest
+
+  build:
+    needs: [ check ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.5.2
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2.1.0
+        with:
+          username: ${{ secrets.DH_USERNAME }}
+          password: ${{ secrets.DH_TOKEN }}
+      
+      - name: Login to Docker Hub
+        uses: cardinalby/export-env-action@2.1.0
+        with:
+            envFile: '.env'    
+            expand: 'true'
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.5.0
+      
+      - name: Build and push (RT only)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./ci/Dockerfile.rt
+          push: true
+          tags: ${{ env.REG }}/${{ env.SRV }}:${{ env.RT }}

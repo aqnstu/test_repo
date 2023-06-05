@@ -1,13 +1,8 @@
 def func1():
     pass
 
-
-
-def func2()sd:
+def func2():
     pass
-
-
-
 
 
 
