@@ -17,4 +17,4 @@ def func2():
 
 def func3():
     """Comment."""
-    ...
+    pass
