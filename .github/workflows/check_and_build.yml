@@ -62,7 +62,7 @@ jobs:
   build:
     needs: [ check ]
   
-    if: ${{needs.check.outputs.need_build}} == 'true'
+    if: needs.check.outputs.need_build == 'true'
 
     runs-on: ubuntu-latest
 
