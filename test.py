@@ -9,3 +9,6 @@ def func2():
 
 def func2():
     pass
+
+def func3():
+    ...
