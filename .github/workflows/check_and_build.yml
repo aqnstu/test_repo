@@ -9,21 +9,13 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    outputs:
+      need_build: ${{ steps.fetch_changes.outputs.need_build }}
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3.5.2
-  
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4.6.1
-      with:
-        python-version: "3.10"
-
-    - name: Install dependencies for linter
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
+    
     - name: Get Python changed files
       id: changes
       uses: tj-actions/changed-files@v36.0.17
@@ -31,15 +23,35 @@ jobs:
         files: |
           **/*.py
         separator: " "
+    
+    - id: fetch_changes
+      run: echo "need_build=${{ steps.changes.outputs.any_changed }}" >> "$GITHUB_OUTPUT"
+        
+    - name: Set up Python 3.11
+      if: steps.changes.outputs.any_changed == 'true'
+      uses: actions/setup-python@v4.6.1
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies for linter
+      if: steps.changes.outputs.any_changed == 'true'
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Lint with flake8
       if: steps.changes.outputs.any_changed == 'true'
       run: |
-        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --select=E,F --show-source --statistics
-        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --exit-zero --max-line-length=120 --indent-size 4 --max-complexity=20 --statistics
+        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --select=E,F \
+        --show-source --statistics
+        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --exit-zero \
+        --max-line-length=120 --indent-size 4 --max-complexity=20 --statistics
 
   build:
     needs: [ check ]
+  
+    if: ${{needs.check.outputs.need_build}} == true
 
     runs-on: ubuntu-latest
 
