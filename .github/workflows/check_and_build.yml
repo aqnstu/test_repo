@@ -24,10 +24,19 @@ jobs:
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+    - name: Get Python changed files
+      id: changes
+      uses: tj-actions/changed-files@v36.0.17
+      with:
+        files: |
+          **/*.py
+        separator: " "
+
     - name: Lint with flake8
+      if: steps.changes.outputs.any_changed == 'true'
       run: |
-        flake8 . --count --select=E9,F4,F6,F7,F8,F9 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --select=E,F --show-source --statistics
+        flake8 ${{ steps.changes.outputs.all_changed_and_modified_files }} --count --exit-zero --max-line-length=120 --indent-size 4 --max-complexity=20 --statistics
 
   build:
     needs: [ check ]
